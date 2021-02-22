@@ -76,7 +76,7 @@ class SChatServer:
             
             client_socket, client_address = self.server_socket.accept()
             with closing(client_socket) as cs:
-                self.clients.append(client_socket, client_address)
+                self.clients.append((client_socket, client_address))
                 try:
                     client_message = get_message(client_socket)
                     print(client_message)
@@ -90,8 +90,8 @@ class SChatServer:
 
 
 @click.command()
-@click.option('--addr', default="", help='Chat server address')
-@click.option('--port', default=7777, help='Chat server address')
+@click.option('--addr', default=DEFAULT_IP_ADDRESS, help='IP address listening by server')
+@click.option('--port', default=DEFAULT_PORT, help='Listening port')
 def run_server(addr, port):
     my_server = SChatServer(addr, port)
     print(f'SChatServer run. Listening address: {("all addresses (by default)", addr)[bool(addr)]}, port: {port}')

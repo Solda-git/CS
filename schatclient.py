@@ -5,38 +5,36 @@ SChatServer class
 
 server part
 """
-
-
+import json
+from time import time
 from socket import *
 from lib.routines import get_message, send_message
 from lib.settings import ONLINE, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME, RESPONSE, ERROR, CHAT_SERVER_IP_ADDRESS, \
     DEFAULT_PORT
+import click
 
 class SChatClient:
     """
     """
 
-    def __init__(self):
+    def __init__(self, addr, port):
         """
             initializing socket connection
             socket params are taken from config.py
         """
-
         #initialize socket
         self.client_socket = socket(AF_INET,SOCK_STREAM)
-        self.client_socket.connect((CHAT_SERVER_IP_ADDRESS,DEFAULT_PORT))
+        self.client_socket.connect((addr, port))
 
-        #drop all clients
-        self.clients = []
 
     def __del__(self):
         """
         Class destructor closes the client socket
         """
-        client_socket.close()
+        self.client_socket.close()
 
 
-    def make_online(self):
+    def make_online(self, account='guest'):
         """
         function generates request making chat user online
 
@@ -62,13 +60,26 @@ class SChatClient:
         raise ValueError
 
     def run(self):
-        send_message(client_socket, self.make_online())
+        send_message(self.client_socket, self.make_online())
         try:
-            print(self.parse_server_answer(get_message(client_socket)))
+            print(self.parse_server_answer(get_message(self.client_socket)))
         except (ValueError, json.JSONDecodeError):
             print("Can't decode server message")
 
 
+@click.command()
+@click.option('--addr', default=CHAT_SERVER_IP_ADDRESS,help='Chat server IP-address')
+@click.option('--port', default=DEFAULT_PORT, help='Chat server port')
+def run_client(addr, port):
+    print("run_client")
+    my_client = SChatClient(addr, port)
+    print(f"Client is connected to the address|port: {addr}/{port}")
+    send_message(my_client.client_socket,my_client.make_online())
+    try:
+        print(my_client.parse_server_answer(get_message(my_client.client_socket)))
+    except (ValueError, json.JSONDecodeError):
+        print("Can't decode server message")
+
 # main function
 if __name__ == '__main__':
-   print('Hello')
+   run_client()
