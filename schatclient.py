@@ -8,7 +8,6 @@ server part
 import json
 from time import time
 from socket import *
-# from lib.routines import get_message, send_message
 from lib.routines import Messaging
 from lib.settings import ONLINE, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME, RESPONSE, ERROR, CHAT_SERVER_IP_ADDRESS, \
     DEFAULT_PORT
@@ -75,10 +74,8 @@ def run_client(addr, port):
     print("run_client")
     my_client = SChatClient(addr, port)
     print(f"Client is connected to the address/port: {addr}/{port}")
-    #send_message(my_client.client_socket,my_client.make_online())
     my_client.send_message(my_client.client_socket,my_client.make_online())
     try:
-        #print(my_client.parse_server_answer(get_message(my_client.client_socket)))
         print(my_client.parse_server_answer(my_client.get_message(my_client.client_socket)))
     except (ValueError, json.JSONDecodeError):
         print("Can't decode server message")

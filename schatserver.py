@@ -7,7 +7,6 @@ server part
 """
 
 from socket import *
-# from lib.routines import get_message, send_message
 from lib.routines import Messaging
 from lib.settings import MAX_CONNECTIONS, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME, ONLINE, DEFAULT_PORT, \
     DEFAULT_IP_ADDRESS, RESPONSE, ERROR
@@ -79,18 +78,15 @@ class SChatServer(Messaging):
             with closing(client_socket) as cs:
                 self.clients.append((client_socket, client_address))
                 try:
-                    #client_message = get_message(client_socket)
                     client_message = self.get_message(client_socket)
                     print(client_message)
                     server_response = self.parse_message(client_message)
-                    #send_message(client_socket, server_response)
                     self.send_message(client_socket, server_response)
                 except (ValueError, json.JSONDecodeError):
                     print('Incorrect client message received.')
-                
+
 
 # main function
-
 
 @click.command()
 @click.option('--addr', default=DEFAULT_IP_ADDRESS, help='IP address listening by server')
