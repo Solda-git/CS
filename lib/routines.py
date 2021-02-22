@@ -1,5 +1,5 @@
 import json
-from settings import MAX_PACKAGE_LEN, ENCODING
+from lib.settings import MAX_PACKAGE_LEN, ENCODING
 
 def get_message(socket):
     """
@@ -23,6 +23,3 @@ def send_message(socket, message):
     :return:
     """
     socket.send(json.dumps(message).encode(ENCODING))
-
-
-print("ok")
