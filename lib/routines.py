@@ -1,5 +1,5 @@
 import json
-from lib.settings import MAX_PACKAGE_LEN, ENCODING
+from .settings import MAX_PACKAGE_LEN, ENCODING
 
 class Messaging():
     def get_message(self, socket):

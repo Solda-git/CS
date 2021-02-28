@@ -19,3 +19,5 @@ RESPONSE = 'response'
 ERROR = 'error'
 
 
+def print_hw():
+    print('Hello world')
