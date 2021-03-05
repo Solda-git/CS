@@ -5,6 +5,7 @@ SChatServer class
 
 server part
 """
+import sys
 import json
 from time import time
 from socket import *
@@ -12,6 +13,11 @@ from socket import *
 from lib.routines import Messaging
 from lib.settings import ONLINE, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME, RESPONSE, ERROR, CHAT_SERVER_IP_ADDRESS, \
     DEFAULT_PORT
+
+import logging
+import log.config.client_log_config
+
+c_logger = logging.getLogger('client.log')
 
 
 class SChatClient(Messaging):
@@ -24,15 +30,22 @@ class SChatClient(Messaging):
             socket params are taken from config.py
         """
         #initialize socket
-        self.client_socket = socket(AF_INET,SOCK_STREAM)
-        self.client_socket.connect((addr, port))
+        try:
+            self.client_socket = socket(AF_INET,SOCK_STREAM)
+            self.client_socket.connect((addr, port))
+            c_logger.info(f"Client connected to address/port: {addr}/{port}")
 
+        except ConnectionRefusedError as e:
+            c_logger.exception(f"Connection error accured: {e.strerror}")
+            print("No socket created. Client stopped.")
+            sys.exit()
 
     def __del__(self):
         """
         Class destructor closes the client socket
         """
         self.client_socket.close()
+        c_logger.info("Connection closed.")
 
 
     def make_online(self, account='guest'):
@@ -40,13 +53,19 @@ class SChatClient(Messaging):
         function generates request making chat user online
 
         """
-        return {
+        online_msg =  {
             COMMAND: ONLINE,
             TIMESTAMP: time(),
             USER: {
                 ACCOUNT_NAME: account
             }
         }
+        c_logger.info(f'Online message for user {online_msg[USER][ACCOUNT_NAME]} '
+                   f'created: {online_msg}.')
+
+        return online_msg
+
+
 
     def parse_server_answer(self, message):
         """
@@ -54,10 +73,13 @@ class SChatClient(Messaging):
         :param message:
         :return: dict with status
         """
+        c_logger.debug(f'Parsing server message: {message}.')
         if RESPONSE in message:
             if message[RESPONSE] == 200:
+                c_logger.info(f'Correct server response: {message[RESPONSE]}')
                 return f'Correct message with response {message[RESPONSE]}.'
             if message[RESPONSE] == 400:    
+                c_logger.warning("Bad server respnse: {message[RESPONSE]}: {message[ERROR]}")
                 return f'Bad response. {message[RESPONSE]}: {message[ERROR]}'
         raise ValueError
 
@@ -66,27 +88,7 @@ class SChatClient(Messaging):
         self.send_message(self.client_socket, self.make_online())
         try:
             print(self.parse_server_answer(self.get_message(self.client_socket)))
-        except (ValueError, json.JSONDecodeError):
+        except (ValueError, json.JSONDecodeError) as e:
+            c_logger.exception(f'Incorrect message format: {e.strerror}')
             print("Can't decode server message")
 
-
-# def print_hw():
-#     print("Heelo world")
-
-
-# @click.command()
-# @click.option('--addr', default=CHAT_SERVER_IP_ADDRESS,help='Chat server IP-address')
-# @click.option('--port', default=DEFAULT_PORT, help='Chat server port')
-# def run_client(addr, port):
-#     print("run_client")
-#     my_client = SChatClient(addr, port)
-#     print(f"Client is connected to the address/port: {addr}/{port}")
-#     my_client.send_message(my_client.client_socket,my_client.make_online())
-#     try:
-#         print(my_client.parse_server_answer(my_client.get_message(my_client.client_socket)))
-#     except (ValueError, json.JSONDecodeError):
-#         print("Can't decode server message")
-
-# # main function
-# if __name__ == '__main__':
-#    run_client()

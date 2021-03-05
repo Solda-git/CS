@@ -13,30 +13,41 @@ from lib.settings import MAX_CONNECTIONS, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME
 
 from contextlib import closing
 
+import logging
+import log.config.server_log_config
+
+s_logger = logging.getLogger('server.log')
+
 class SChatServer(Messaging):
     """
     """
 
     def __init__(self, address, port):
-        self.server_socket = socket(AF_INET,SOCK_STREAM)
+        
+        try:
+            self.server_socket = socket(AF_INET,SOCK_STREAM)
 
-        if (address==""):
-            address = DEFAULT_IP_ADDRESS
-        if port <= 0:
-            port =  DEFAULT_PORT    
-        self.server_socket.bind((address, port))    
-        # self.server_socket.bind((DEFAULT_IP_ADDRESS, DEFAULT_PORT))
-        self.server_socket.listen()
+            if (address==""):
+                address = DEFAULT_IP_ADDRESS
+            if port <= 0:
+                port =  DEFAULT_PORT    
+            self.server_socket.bind((address, port))    
+            # self.server_socket.bind((DEFAULT_IP_ADDRESS, DEFAULT_PORT))
+            self.server_socket.listen()
+            s_logger.info(f"Server is listening the port: {port}")
+            #initialize(drop) client's list
+            self.clients = []
+        except error:
+            s_logger.exception(f"Server connection error accured: {e.strerror}")
 
-        #initialize(drop) client's list
-        self.clients = []
- 
+
     def __del__(self):
         """
         closing sockets
         """
         #closing server socket
         self.server_socket.close()
+        s_logger.info('Server socket closed')
 
         #closing all the client sockets
         while (len(self.clients)):
@@ -61,11 +72,14 @@ class SChatServer(Messaging):
         :param message:
         :return: dict with response code
         """
+        s_logger.debug(f'Parsing message: {message}')
         if COMMAND in message and message[COMMAND] == ONLINE and TIMESTAMP in message \
             and USER in message and ACCOUNT_NAME in message[USER] and message[USER][ACCOUNT_NAME] == 'guest':
+            s_logger.info(f'Correct message recieved:{message}')
             return {
                 RESPONSE: 200
             }
+        s_logger.error(f'Incorrect message {message}. Bad request.')
         return {
             RESPONSE: 400,
             ERROR: 'Bad request'
@@ -80,13 +94,16 @@ class SChatServer(Messaging):
             # getting the client socket and  adding it to the cliest list
             
             client_socket, client_address = self.server_socket.accept()
+            s_logger.info(f'Connection established. Client details: {client_address}.')
             with closing(client_socket) as cs:
                 self.clients.append((client_socket, client_address))
                 try:
                     client_message = self.get_message(client_socket)
-                    print(client_message)
+                    s_logger.info(f'Received message {client_message} from client {client_address}.')
                     server_response = self.parse_message(client_message)
                     self.send_message(client_socket, server_response)
-                except (ValueError, json.JSONDecodeError):
-                    print('Incorrect client message received.')
+                    s_logger.info(f'Server answer: {server_response}')
+                except (ValueError, json.JSONDecodeError) as e:
+                    s_logger.exception("Incorrect client message received.")        
+                    
 

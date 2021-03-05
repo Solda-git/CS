@@ -1,3 +1,6 @@
+import logging
+
+
 DEFAULT_PORT = 7777
 
 DEFAULT_IP_ADDRESS = ''
@@ -17,7 +20,6 @@ ACCOUNT_NAME = 'account_name'
 ONLINE = 'online'
 RESPONSE = 'response'
 ERROR = 'error'
-
-
-def print_hw():
-    print('Hello world')
+# log settings
+LOG_LEVEL = logging.DEBUG
+LOG_PATH = './log/log/'

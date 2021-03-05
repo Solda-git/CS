@@ -20,3 +20,12 @@ def run_client(addr, port):
 # main function
 if __name__ == '__main__':
    run_client()
+    # import logging
+    # import log.config.client_log_config
+
+    # c_logger = logging.getLogger('client.log')
+    # c_logger.debug('Critical record')
+    # c_logger.info('Info record')
+    # c_logger.warning('Warning record')
+    # c_logger.error('Error record')
+    # c_logger.critical("Critical record")
