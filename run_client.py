@@ -2,6 +2,7 @@ import click
 from chat.schatclient import SChatClient
 from lib.settings import CHAT_SERVER_IP_ADDRESS, DEFAULT_PORT
 import json
+# from lib.routines import log
 
 
 @click.command()
@@ -12,20 +13,31 @@ def run_client(addr, port):
     my_client = SChatClient(addr, port)
     print(f"Client is connected to the address/port: {addr}/{port}")
     my_client.send_message(my_client.client_socket,my_client.make_online())
+    # my_client.run()
     try:
         print(my_client.parse_server_answer(my_client.get_message(my_client.client_socket)))
     except (ValueError, json.JSONDecodeError):
         print("Can't decode server message")
 
+# class Test():
+#     @log
+#     def __init__(self, mes):
+#         self._message = mes
+    
+#     @log
+#     def fn(self):
+#         print(self._message)
+
+
 # main function
 if __name__ == '__main__':
-   run_client()
-    # import logging
-    # import log.config.client_log_config
+#    t = Test('test')
+#    t.fn()
+    # @log
+    # def test():
+    #      print('test function')   
 
-    # c_logger = logging.getLogger('client.log')
-    # c_logger.debug('Critical record')
-    # c_logger.info('Info record')
-    # c_logger.warning('Warning record')
-    # c_logger.error('Error record')
-    # c_logger.critical("Critical record")
+
+    # test()
+
+    run_client()

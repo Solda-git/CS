@@ -7,7 +7,7 @@ server part
 """
 import json
 from socket import *
-from lib.routines import Messaging
+from lib.routines import Messaging, logdeco
 from lib.settings import MAX_CONNECTIONS, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME, ONLINE, DEFAULT_PORT, \
     DEFAULT_IP_ADDRESS, RESPONSE, ERROR
 
@@ -21,7 +21,7 @@ s_logger = logging.getLogger('server.log')
 class SChatServer(Messaging):
     """
     """
-
+    @logdeco
     def __init__(self, address, port):
         
         try:
@@ -40,7 +40,7 @@ class SChatServer(Messaging):
         except error:
             s_logger.exception(f"Server connection error accured: {e.strerror}")
 
-
+    @logdeco
     def __del__(self):
         """
         closing sockets
@@ -54,6 +54,7 @@ class SChatServer(Messaging):
             s = self.clients.pop()
             s[0].close()
     
+    @logdeco
     def close_client(self, s):
         """
             normal closing of client socket
@@ -61,10 +62,11 @@ class SChatServer(Messaging):
         """
         for i in range(len(self.clients)):
             if s == self.clients[i][0]:
-                 self.clients.pop()
-                 s.close()   
-                 break
+                self.clients.pop()
+                s.close()   
+                break
 
+    @logdeco
     def parse_message(self, message):
         """
         function parses incoming message and processes it.
@@ -85,7 +87,7 @@ class SChatServer(Messaging):
             ERROR: 'Bad request'
         }             
 
-
+    @logdeco
     def run(self): 
         """
         running infinity cycle with homework task completion

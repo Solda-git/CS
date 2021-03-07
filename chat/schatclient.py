@@ -9,8 +9,8 @@ import sys
 import json
 from time import time
 from socket import *
-# from lib.routines import Messaging 
-from lib.routines import Messaging
+from lib.routines import Messaging, logdeco
+
 from lib.settings import ONLINE, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME, RESPONSE, ERROR, CHAT_SERVER_IP_ADDRESS, \
     DEFAULT_PORT
 
@@ -23,7 +23,7 @@ c_logger = logging.getLogger('client.log')
 class SChatClient(Messaging):
     """
     """
-
+    @logdeco
     def __init__(self, addr, port):
         """
             initializing socket connection
@@ -40,6 +40,7 @@ class SChatClient(Messaging):
             print("No socket created. Client stopped.")
             sys.exit()
 
+    @logdeco
     def __del__(self):
         """
         Class destructor closes the client socket
@@ -47,7 +48,7 @@ class SChatClient(Messaging):
         self.client_socket.close()
         c_logger.info("Connection closed.")
 
-
+    @logdeco
     def make_online(self, account='guest'):
         """
         function generates request making chat user online
@@ -65,8 +66,7 @@ class SChatClient(Messaging):
 
         return online_msg
 
-
-
+    @logdeco
     def parse_server_answer(self, message):
         """
         function processes message from the server
@@ -84,11 +84,11 @@ class SChatClient(Messaging):
         raise ValueError
 
 
-    def run(self):
-        self.send_message(self.client_socket, self.make_online())
-        try:
-            print(self.parse_server_answer(self.get_message(self.client_socket)))
-        except (ValueError, json.JSONDecodeError) as e:
-            c_logger.exception(f'Incorrect message format: {e.strerror}')
-            print("Can't decode server message")
+    # def run(self):
+    #     self.send_message(self.client_socket, self.make_online())
+    #     try:
+    #         print(self.parse_server_answer(self.get_message(self.client_socket)))
+    #     except (ValueError, json.JSONDecodeError) as e:
+    #         c_logger.exception(f'Incorrect message format: {e.strerror}')
+    #         print("Can't decode server message")
 
