@@ -23,3 +23,8 @@ ERROR = 'error'
 # log settings
 LOG_LEVEL = logging.DEBUG
 LOG_PATH = './log/log/'
+
+
+SEND_MODE = 's'
+RECV_MODE = 'r'
+DUPLEX_MODE = 'd'

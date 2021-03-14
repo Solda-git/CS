@@ -6,10 +6,11 @@ import json
 
 
 @click.command()
+@click.option('--mode', default='rw')
 @click.option('--addr', default=CHAT_SERVER_IP_ADDRESS,help='Chat server IP-address')
 @click.option('--port', default=DEFAULT_PORT, help='Chat server port')
 def run_client(addr, port):
-    print("run_client")
+    print(f"run_client in {mode} mode" )
     my_client = SChatClient(addr, port)
     print(f"Client is connected to the address/port: {addr}/{port}")
     my_client.send_message(my_client.client_socket,my_client.make_online())
@@ -19,25 +20,9 @@ def run_client(addr, port):
     except (ValueError, json.JSONDecodeError):
         print("Can't decode server message")
 
-# class Test():
-#     @log
-#     def __init__(self, mes):
-#         self._message = mes
-    
-#     @log
-#     def fn(self):
-#         print(self._message)
+
 
 
 # main function
 if __name__ == '__main__':
-#    t = Test('test')
-#    t.fn()
-    # @log
-    # def test():
-    #      print('test function')   
-
-
-    # test()
-
     run_client()
