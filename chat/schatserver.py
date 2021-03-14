@@ -9,7 +9,7 @@ import json
 from socket import *
 from lib.routines import Messaging, logdeco
 from lib.settings import MAX_CONNECTIONS, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME, ONLINE, DEFAULT_PORT, \
-    DEFAULT_IP_ADDRESS, RESPONSE, ERROR
+    DEFAULT_IP_ADDRESS, RESPONSE, ERROR, MESSAGE, MESSAGE_TEXT, SENDER
 import select
 from contextlib import closing
 
@@ -43,7 +43,6 @@ class SChatServer(Messaging):
         except error:
             s_logger.exception(f"Server connection error accured: {e.strerror}")
 
-    @logdeco
     def __del__(self):
         """
         closing sockets
@@ -99,11 +98,12 @@ class SChatServer(Messaging):
             ERROR: 'Bad request'
         }             
 
-    @logdeco
     def run(self): 
         """
         running infinity cycle with homework task completion
         """
+        #
+        print('SChatServer.run()')
         while True:
             try:
                 # getting the client socket and  adding it to the cliest list
@@ -120,44 +120,30 @@ class SChatServer(Messaging):
             #err_list = []
 
             try:
-                if clients: # there are active client(s) connected to the server
-                    receiver_list, sender_list, err_list = select.select(each_clients, each_clients, [], 0)
-                except OSError as os_error:
+                if self.clients: # there are active client(s) connected to the server
+                    receiver_list, sender_list, err_list = select.select(self.clients, self.clients, [], 0)
+            except OSError as os_error:
                     pass
-                if receiver_list:
-                    for sender in receiver_list:
-                        try:
-                            self.parse_message(self.get_message(sender), sender)
-                        except:
-                            s_logger.info(f'Client {sender.getpeername()} has disconnected.')
-                            clients.remove(sender)
+            if receiver_list:
+                for sender in receiver_list:
+                    try:
+                        self.parse_message(self.get_message(sender), sender)
+                    except:
+                        s_logger.info(f'Client {sender.getpeername()} has disconnected.')
+                        clients.remove(sender)
 
-                if messages and sender_list:
-                    message = {
-                        COMMAND: MESSAGE,
-                        SENDER: messages[0][0],
-                        TIMESTAMP: time(),
-                        MESSAGE_TEXT: messages[0][1]
-                    }
-                    del messages[0]
-                    for awaiter in sender_list:
+            if self.messages and sender_list:
+                message = {
+                    COMMAND: MESSAGE,
+                    SENDER: messages[0][0],
+                    TIMESTAMP: time(),
+                    MESSAGE_TEXT: messages[0][1]
+                }
+                del messages[0]
+                for awaiter in sender_list:
                     try:
                         self.send_message(awaiter, message)
                     except:
                         s_logger.info(f'Client {awaiter.getpeername()} has disconnected.')
                         clients.remove(awaiter)
-            
-            
-            
-            
-            # with closing(client_socket) as cs:
-                # try:
-                #     client_message = self.get_message(client_socket)
-                #     s_logger.info(f'Received message {client_message} from client {client_address}.')
-                #     server_response = self.parse_message(client_message)
-                #     self.send_message(client_socket, server_response)
-                #     s_logger.info(f'Server answer: {server_response}')
-                # except (ValueError, json.JSONDecodeError) as e:
-                #     s_logger.exception("Incorrect client message received.")        
-                    
 

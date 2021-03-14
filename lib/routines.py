@@ -5,8 +5,7 @@ from functools  import wraps
 import logging
 
 def logdeco(fn):
-    # @wraps(fn)
-
+    @wraps(fn)
     def decorated(*args, **kwargs):
         call_module = stack()[1].filename[-9:-3]
         func_name = stack()[1].function

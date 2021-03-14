@@ -20,6 +20,11 @@ ACCOUNT_NAME = 'account_name'
 ONLINE = 'online'
 RESPONSE = 'response'
 ERROR = 'error'
+
+SENDER = 'sender'
+MESSAGE = 'message'
+MESSAGE_TEXT = 'message_text'
+
 # log settings
 LOG_LEVEL = logging.DEBUG
 LOG_PATH = './log/log/'
