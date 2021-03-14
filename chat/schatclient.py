@@ -12,7 +12,7 @@ from socket import *
 from lib.routines import Messaging, logdeco
 
 from lib.settings import ONLINE, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME, RESPONSE, ERROR, CHAT_SERVER_IP_ADDRESS, \
-    DEFAULT_PORT, RECV_MODE, SEND_MODE, DUPLEX_MODE, MESSAGE_TEXT, MESSAGE, SENDER
+    DEFAULT_PORT, RECV_MODE, SEND_MODE, DUPLEX_MODE, BROADCAST_MODE, MESSAGE_TEXT, MESSAGE, SENDER
 import logging
 import log.config.client_log_config
 
@@ -40,7 +40,6 @@ class SChatClient(Messaging):
             print("No socket created. Client stopped.")
             sys.exit()
 
-    @logdeco
     def __del__(self):
         """
         Class destructor closes the client socket
@@ -92,7 +91,7 @@ class SChatClient(Messaging):
         message_text = input('Input message text or \'q\' for exit. \n')
         if message_text == 'q':
             self.client_socket.close()
-            c_logger.info(f'User {each_socket} closed the connection.')
+            c_logger.info(f'User {self.client_socket} closed the connection.')
             print('Connection closed. See you next time')
             sys.exit(0)
         message = {
@@ -139,7 +138,9 @@ class SChatClient(Messaging):
                 if self._mode == SEND_MODE:
                     self.run_in_send_mode()            
                 elif self._mode == RECV_MODE:
-                    self.run_in_recv_mode()            
+                    self.run_in_recv_mode()
+                elif self._mode == BROADCAST_MODE
+                    self.run_in_broadcast_mode()            
                 else:
                     self.run_in_duplex_mode()            
 
@@ -158,9 +159,12 @@ class SChatClient(Messaging):
         try:
             self.recv_message(self.get_message(self.client_socket))
         except (ConnectionResetError, ConnectionError, ConnectionRefusedError):
-            c_logger.error(f'Connection with server {each_server_address} lost.')
+            c_logger.error(f'Connection with server {self.addr} lost.')
             sys.exit(1)
 
+    @logdeco
+    run_in_broadcast_mode():
+        pass
 
     def run_in_duplex_mode(self):
         print(f"Client is working in <duplex> mode")
