@@ -12,7 +12,7 @@ from lib.settings import MAX_CONNECTIONS, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME
     DEFAULT_IP_ADDRESS, RESPONSE, ERROR, MESSAGE, MESSAGE_TEXT, SENDER
 import select
 from contextlib import closing
-
+from time import time
 import logging
 import log.config.server_log_config
 
@@ -54,7 +54,7 @@ class SChatServer(Messaging):
         #closing all the client sockets
         while (len(self.clients)):
             s = self.clients.pop()
-            s[0].close()
+            s.close()
     
     @logdeco
     def close_client(self, s):
@@ -63,7 +63,7 @@ class SChatServer(Messaging):
             looking for s socket, remove from the clients socket list and close it
         """
         for i in range(len(self.clients)):
-            if s == self.clients[i][0]:
+            if s == self.clients[i]:
                 self.clients.pop()
                 s.close()   
                 break
@@ -102,8 +102,6 @@ class SChatServer(Messaging):
         """
         running infinity cycle with homework task completion
         """
-        #
-        print('SChatServer.run()')
         while True:
             try:
                 # getting the client socket and  adding it to the cliest list
@@ -113,16 +111,16 @@ class SChatServer(Messaging):
             else:
                 print(f'Client {client_address} connected.')
                 s_logger.info(f'Connection established. Client details: {client_address}.')
-                self.clients.append((client_socket, client_address))
-
+                # self.clients.append((client_socket, client_address))
+                self.clients.append(client_socket)
             receiver_list = []
             sender_list = []
-            #err_list = []
+            err_list = []
 
             try:
                 if self.clients: # there are active client(s) connected to the server
                     receiver_list, sender_list, err_list = select.select(self.clients, self.clients, [], 0)
-            except OSError as os_error:
+            except OSError:
                     pass
             if receiver_list:
                 for sender in receiver_list:
@@ -130,20 +128,20 @@ class SChatServer(Messaging):
                         self.parse_message(self.get_message(sender), sender)
                     except:
                         s_logger.info(f'Client {sender.getpeername()} has disconnected.')
-                        clients.remove(sender)
+                        self.clients.remove(sender)
 
             if self.messages and sender_list:
                 message = {
                     COMMAND: MESSAGE,
-                    SENDER: messages[0][0],
+                    SENDER: self.messages[0][0],
                     TIMESTAMP: time(),
-                    MESSAGE_TEXT: messages[0][1]
+                    MESSAGE_TEXT: self.messages[0][1]
                 }
-                del messages[0]
+                del self.messages[0]
                 for awaiter in sender_list:
                     try:
                         self.send_message(awaiter, message)
                     except:
                         s_logger.info(f'Client {awaiter.getpeername()} has disconnected.')
-                        clients.remove(awaiter)
+                        self.clients.remove(awaiter)
 

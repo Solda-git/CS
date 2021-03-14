@@ -14,7 +14,7 @@ import json
 @click.option('--mode', default='d')
 @click.option('--addr', default=CHAT_SERVER_IP_ADDRESS,help='Chat server IP-address')
 @click.option('--port', default=DEFAULT_PORT, help='Chat server port')
-def run_client(addr, port):
+def run_client(mode, addr, port):
     print(f"run_client in {mode} mode" )
     my_client = SChatClient(mode, addr, port)
     print(f"Client is connected to the address/port: {addr}/{port}")

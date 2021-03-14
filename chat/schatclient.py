@@ -12,8 +12,7 @@ from socket import *
 from lib.routines import Messaging, logdeco
 
 from lib.settings import ONLINE, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME, RESPONSE, ERROR, CHAT_SERVER_IP_ADDRESS, \
-    DEFAULT_PORT, RECV_MODE, SEND_MODE, DUPLEX_MODE
-
+    DEFAULT_PORT, RECV_MODE, SEND_MODE, DUPLEX_MODE, MESSAGE_TEXT, MESSAGE
 import logging
 import log.config.client_log_config
 
@@ -138,11 +137,11 @@ class SChatClient(Messaging):
         else:
             while True:
                 if self._mode == SEND_MODE:
-                    run_in_send_mode()            
+                    self.run_in_send_mode()            
                 elif self._mode == RECV_MODE:
-                    run_in_recv_mode()            
+                    self.run_in_recv_mode()            
                 else:
-                    run_in_duplex_mode()            
+                    self.run_in_duplex_mode()            
 
     @logdeco
     def run_in_send_mode(self):
