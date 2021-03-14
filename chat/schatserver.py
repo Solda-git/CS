@@ -127,7 +127,8 @@ class SChatServer(Messaging):
                     try:
                         self.parse_message(self.get_message(sender), sender)
                     except:
-                        s_logger.info(f'Client {sender.getpeername()} has disconnected.')
+                        # s_logger.info(f'Client {sender.getpeername()} has disconnected.')
+                        s_logger.info(f'Client {sender} has disconnected.')
                         self.clients.remove(sender)
 
             if self.messages and sender_list:

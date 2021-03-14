@@ -12,7 +12,7 @@ from socket import *
 from lib.routines import Messaging, logdeco
 
 from lib.settings import ONLINE, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME, RESPONSE, ERROR, CHAT_SERVER_IP_ADDRESS, \
-    DEFAULT_PORT, RECV_MODE, SEND_MODE, DUPLEX_MODE, MESSAGE_TEXT, MESSAGE
+    DEFAULT_PORT, RECV_MODE, SEND_MODE, DUPLEX_MODE, MESSAGE_TEXT, MESSAGE, SENDER
 import logging
 import log.config.client_log_config
 
@@ -112,7 +112,7 @@ class SChatClient(Messaging):
         if COMMAND in message and message[COMMAND] == MESSAGE and \
             SENDER in message and MESSAGE_TEXT in message:
             info = f'Message {message[MESSAGE_TEXT]} received from {message[SENDER]}'
-            print(info)
+            print(message[MESSAGE_TEXT])
             c_logger.info(info)
         else:
             c_logger.error(f'Incorrect message {message}')
@@ -145,7 +145,7 @@ class SChatClient(Messaging):
 
     @logdeco
     def run_in_send_mode(self):
-        print(f"Client is working in <send> mode")
+        # print(f"Client is working in <send> mode")
         try:
             self.send_message(self.client_socket, self.create_message())
         except (ConnectionResetError, ConnectionError, ConnectionRefusedError):
@@ -154,7 +154,7 @@ class SChatClient(Messaging):
     
     @logdeco
     def run_in_recv_mode(self):
-        print(f"Client is working in <receive> mode")
+        # print(f"Client is working in <receive> mode")
         try:
             self.recv_message(self.get_message(self.client_socket))
         except (ConnectionResetError, ConnectionError, ConnectionRefusedError):
