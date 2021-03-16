@@ -15,6 +15,8 @@ from lib.settings import ONLINE, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME, RESPONS
     DEFAULT_PORT, RECV_MODE, SEND_MODE, DUPLEX_MODE, BROADCAST_MODE, MESSAGE_TEXT, MESSAGE, SENDER
 import logging
 import log.config.client_log_config
+import select
+import _io
 
 c_logger = logging.getLogger('client.log')
 
@@ -139,7 +141,7 @@ class SChatClient(Messaging):
                     self.run_in_send_mode()            
                 elif self._mode == RECV_MODE:
                     self.run_in_recv_mode()
-                elif self._mode == BROADCAST_MODE
+                elif self._mode == BROADCAST_MODE:
                     self.run_in_broadcast_mode()            
                 else:
                     self.run_in_duplex_mode()            
@@ -163,7 +165,27 @@ class SChatClient(Messaging):
             sys.exit(1)
 
     @logdeco
-    run_in_broadcast_mode():
+    def run_in_broadcast_mode(self):
+        receiver_list = []
+        sender_list = []
+        err_list = []    
+        try: 
+            receiver_list, sender_list, err_list = select.select([self.client_socket, sys.stdin], [self.client_socket], [], 0)
+        except OSError:
+                pass
+        try:
+            if receiver_list:
+                for receiver in receiver_list:
+                    if (type(receiver)==_io.TextIOWrapper):
+                        self.send_message(self.client_socket, self.create_message())
+                    else:
+                        self.recv_message(self.get_message(self.client_socket))
+        except (ConnectionResetError, ConnectionError, ConnectionRefusedError):
+            c_logger.error(f'Connection with server {self.addr} lost.')
+            sys.exit(1)
+
+# finally:
+#     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
         pass
 
     def run_in_duplex_mode(self):

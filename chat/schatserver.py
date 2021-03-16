@@ -21,7 +21,7 @@ s_logger = logging.getLogger('server.log')
 class SChatServer(Messaging):
     """
     """
-    @logdeco
+
     def __init__(self, address, port):
         
         try:
@@ -39,7 +39,7 @@ class SChatServer(Messaging):
             s_logger.info(f"Server is listening the port: {port}")
             #initialize(drop) client's list
             self.clients = []
-            self.messages = []
+            self.messages = [] #Clients messages tuple in format (sender, data, socket)
         except error:
             s_logger.exception(f"Server connection error accured: {e.strerror}")
 
@@ -88,7 +88,12 @@ class SChatServer(Messaging):
             return
         elif COMMAND in message and message[COMMAND] == MESSAGE and TIMESTAMP in message \
             and MESSAGE_TEXT in message:
-            self.messages.append((message[ACCOUNT_NAME], message[MESSAGE_TEXT]))
+            # self.messages.append((message[ACCOUNT_NAME], message[MESSAGE_TEXT]))
+            ####new code###
+            self.messages.append((message[ACCOUNT_NAME], message[MESSAGE_TEXT], client))
+            ###end of new code###
+
+
             print(f'Message with {message[COMMAND]} command')
             return 
 
@@ -138,10 +143,12 @@ class SChatServer(Messaging):
                     TIMESTAMP: time(),
                     MESSAGE_TEXT: self.messages[0][1]
                 }
+                echo_client =  self.messages[0][2]   #new code
                 del self.messages[0]
                 for awaiter in sender_list:
                     try:
-                        self.send_message(awaiter, message)
+                        if not(awaiter is echo_client): # new code
+                            self.send_message(awaiter, message)
                     except:
                         s_logger.info(f'Client {awaiter.getpeername()} has disconnected.')
                         self.clients.remove(awaiter)
