@@ -12,7 +12,7 @@ from socket import *
 from lib.routines import Messaging, logdeco
 
 from lib.settings import ONLINE, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME, RESPONSE, ERROR, CHAT_SERVER_IP_ADDRESS, \
-    DEFAULT_PORT, RECV_MODE, SEND_MODE, DUPLEX_MODE, BROADCAST_MODE, MESSAGE_TEXT, MESSAGE, SENDER
+    DEFAULT_PORT, RECV_MODE, SEND_MODE, PEER_TO_PEER_MODE, DUPLEX_MODE, BROADCAST_MODE, MESSAGE_TEXT, MESSAGE, SENDER
 import logging
 import log.config.client_log_config
 import select
@@ -25,7 +25,7 @@ class SChatClient(Messaging):
     """
     """
     @logdeco
-    def __init__(self, mode, addr, port):
+    def __init__(self, name='guest', mode, addr, port):
         """
             initializing socket connection
             socket params are taken from config.py
@@ -142,7 +142,9 @@ class SChatClient(Messaging):
                 elif self._mode == RECV_MODE:
                     self.run_in_recv_mode()
                 elif self._mode == BROADCAST_MODE:
-                    self.run_in_broadcast_mode()            
+                    self.run_in_broadcast_mode()
+                elif self._mode == PEER_TO_PEER_MODE:
+                    self.run_in_p2p_mode()                
                 else:
                     self.run_in_duplex_mode()            
 
@@ -186,6 +188,9 @@ class SChatClient(Messaging):
 
 # finally:
 #     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+        pass
+
+    def run_in_p2p_mode(self):    
         pass
 
     def run_in_duplex_mode(self):
