@@ -25,7 +25,7 @@ class SChatClient(Messaging):
     """
     """
     @logdeco
-    def __init__(self, name='guest', mode, addr, port):
+    def __init__(self, mode, addr, port, name='guest'):
         """
             initializing socket connection
             socket params are taken from config.py
@@ -90,7 +90,8 @@ class SChatClient(Messaging):
         """
         function creates client's message 
         """
-        message_text = input('Input message text or \'q\' for exit. \n')
+        # message_text = input('Input message text or \'q\' for exit. \n')
+        message_text = input('>')
         if message_text == 'q':
             self.client_socket.close()
             c_logger.info(f'User {self.client_socket} closed the connection.')
@@ -115,38 +116,81 @@ class SChatClient(Messaging):
             info = f'Message {message[MESSAGE_TEXT]} received from {message[SENDER]}'
             print(message[MESSAGE_TEXT])
             c_logger.info(info)
+            return message[MESSAGE_TEXT]
         else:
             c_logger.error(f'Incorrect message {message}')
 
     @logdeco
-    def run(self):
-        try:
-            online_msg = self.make_online()
-            self.send_message(self.client_socket, online_msg)
-            c_logger.info(f'Message: {online_msg} sent to server.')
-            response_message = self.parse_server_answer(self.get_message(self.client_socket))
-            c_logger.info(f'Received message from the server: {response_message}.')
+    def run(self, conn=None):
+        if conn is None:
+            try:
+                online_msg = self.make_online()
+                self.send_message(self.client_socket, online_msg)
+                c_logger.info(f'Message: {online_msg} sent to server.')
+                response_message = self.parse_server_answer(self.get_message(self.client_socket))
+                c_logger.info(f'Received message from the server: {response_message}.')
 
-        except (ValueError, json.JSONDecodeError):
-            c_logger.error("Incorrect client message received. Can\'t decode server message.")
-            sys.exit(1)
+            except (ValueError, json.JSONDecodeError):
+                c_logger.error("Incorrect client message received. Can\'t decode server message.")
+                sys.exit(1)
 
-        except ConnectionRefusedError:
-            c_logger.critical(f'Can\'t connect to server.')
-            sys.exit(1)
+            except ConnectionRefusedError:
+                c_logger.critical(f'Can\'t connect to server.')
+                sys.exit(1)
 
+            else:
+                while True:
+                    if self._mode == SEND_MODE:
+                        self.run_in_send_mode()            
+                    elif self._mode == RECV_MODE:
+                        self.run_in_recv_mode()
+                    elif self._mode == BROADCAST_MODE:
+                        self.run_in_broadcast_mode()      
+                    else:
+                        self.run_in_duplex_mode()            
         else:
-            while True:
-                if self._mode == SEND_MODE:
-                    self.run_in_send_mode()            
-                elif self._mode == RECV_MODE:
-                    self.run_in_recv_mode()
-                elif self._mode == BROADCAST_MODE:
-                    self.run_in_broadcast_mode()
-                elif self._mode == PEER_TO_PEER_MODE:
-                    self.run_in_p2p_mode()                
-                else:
-                    self.run_in_duplex_mode()            
+            self.run_in_p2p_mode(conn)
+
+
+
+    def run_in_p2p_mode(self, conn):
+        receiver_list = []
+        sender_list = []
+        err_list = []  
+        while True:
+            try: 
+                receiver_list, sender_list, err_list = select.select([conn, sys.stdin], [conn], [], 0)
+            except OSError:
+                    pass
+            try:
+                if receiver_list:
+                    for receiver in receiver_list:
+                        if (type(receiver)==_io.TextIOWrapper):
+                            conn.send(input('>')) 
+                        else:
+                            conn.recv()
+                # if sender_list:
+                #     for sender in sender_list:
+                #         conn.send()
+
+            except:
+                c_logger.error(f'Pipe error in main process')
+                conn.close()
+                sys.exit(1)
+
+    def run_in_pipe(self, conn):
+        print("run_in_pipe running")
+        while True:
+            try:
+                mirror_msg = "Received: " + conn.recv()
+                print(mirror_msg)
+                conn.send(mirror_msg)
+            except EOFError:
+                break
+            # finally:
+            #     conn.close()
+        print("run_in_pipe finishing")
+
 
     @logdeco
     def run_in_send_mode(self):
@@ -186,14 +230,8 @@ class SChatClient(Messaging):
             c_logger.error(f'Connection with server {self.addr} lost.')
             sys.exit(1)
 
-# finally:
-#     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
-        pass
-
-    def run_in_p2p_mode(self):    
-        pass
-
     def run_in_duplex_mode(self):
         print(f"Client is working in <duplex> mode")
         print('Function developmwent in progress...')
         
+

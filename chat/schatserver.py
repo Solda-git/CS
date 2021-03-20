@@ -26,6 +26,7 @@ class SChatServer(Messaging):
         
         try:
             self.server_socket = socket(AF_INET,SOCK_STREAM)
+            # self.server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR) #nonblocking socket!
 
             if (address==""):
                 address = DEFAULT_IP_ADDRESS
