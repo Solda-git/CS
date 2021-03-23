@@ -169,9 +169,6 @@ class SChatClient(Messaging):
                             conn.send(input('>')) 
                         else:
                             conn.recv()
-                # if sender_list:
-                #     for sender in sender_list:
-                #         conn.send()
 
             except:
                 c_logger.error(f'Pipe error in main process')
@@ -187,8 +184,6 @@ class SChatClient(Messaging):
                 conn.send(mirror_msg)
             except EOFError:
                 break
-            # finally:
-            #     conn.close()
         print("run_in_pipe finishing")
 
 

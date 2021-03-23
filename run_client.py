@@ -39,9 +39,7 @@ def run_client(mode, addr, port):
 
 
 
-
-
-
 # main function
 if __name__ == '__main__':
+    print('running Run_client.main()')
     run_client()
