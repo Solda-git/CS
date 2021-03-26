@@ -44,7 +44,7 @@ def run_chat(q):
     global processes
     print(f'running run_chat({q})')
     args_c1 = ['python', 'run_client.py', '--mode', 'r']
-    args_c2 = ['python', 'run_client.py', '--mode', 'b']
+    args_c2 = ['python', 'run_client.py', '--mode', 's']
     p1 = Popen(args_c1)
     processes.append(p1)
     time.sleep(0.1)
@@ -64,4 +64,3 @@ if __name__ == '__main__':
         # for p in processes:
         #     p.kill()
         pass
-    
