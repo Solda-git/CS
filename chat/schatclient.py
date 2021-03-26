@@ -12,7 +12,8 @@ from socket import *
 from lib.routines import Messaging, logdeco
 
 from lib.settings import ONLINE, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME, RESPONSE, ERROR, CHAT_SERVER_IP_ADDRESS, \
-    DEFAULT_PORT, RECV_MODE, SEND_MODE, PEER_TO_PEER_MODE, DUPLEX_MODE, BROADCAST_MODE, MESSAGE_TEXT, MESSAGE, SENDER
+    DEFAULT_PORT, RECV_MODE, SEND_MODE, PEER_TO_PEER_MODE, DUPLEX_MODE, BROADCAST_MODE, MESSAGE_TEXT, MESSAGE, SENDER, \
+    Port
 import logging
 import log.config.client_log_config
 import select
@@ -24,6 +25,7 @@ c_logger = logging.getLogger('client.log')
 class SChatClient(Messaging):
     """
     """
+    server_port = Port()
     @logdeco
     def __init__(self, mode, addr, port, name='guest'):
         """
@@ -34,7 +36,9 @@ class SChatClient(Messaging):
         try:
             self._mode = mode
             self.client_socket = socket(AF_INET,SOCK_STREAM)
-            self.client_socket.connect((addr, port))
+            self.server_port = port
+            print(f'Type of "port" property: {type(self.server_port)}')
+            self.client_socket.connect((addr, self.server_port))
             c_logger.info(f"Client connected to address/port: {addr}/{port}")
 
         except ConnectionRefusedError as e:

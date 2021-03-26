@@ -35,3 +35,26 @@ RECV_MODE = 'r'
 DUPLEX_MODE = 'd'
 PEER_TO_PEER_MODE = 'p'
 BROADCAST_MODE = 'b'
+
+###################
+MIN_PORT_VALUE = 1024
+MAX_PORT_VALUE = 65535
+
+class Port:
+    def __init__(self, name=""):
+        self.name = '_' + name
+
+    def __get__( self, obj, obj_type):
+        if obj is None:
+            return self
+        return getattr(obj, self.name)
+    
+    def __set__( self, obj, value):
+        if not (MIN_PORT_VALUE < value < MAX_PORT_VALUE):
+            raise ValueError('Port value mast be between 1024 and 65535.')
+        setattr(obj, self.name, value)
+
+    def __delete__( self, obj):
+        pass
+
+############################

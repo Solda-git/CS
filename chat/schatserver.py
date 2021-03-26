@@ -9,7 +9,7 @@ import json
 from socket import *
 from lib.routines import Messaging, logdeco
 from lib.settings import MAX_CONNECTIONS, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME, ONLINE, DEFAULT_PORT, \
-    DEFAULT_IP_ADDRESS, RESPONSE, ERROR, MESSAGE, MESSAGE_TEXT, SENDER
+    DEFAULT_IP_ADDRESS, RESPONSE, ERROR, MESSAGE, MESSAGE_TEXT, SENDER, Port
 import select
 from contextlib import closing
 from time import time
@@ -21,6 +21,7 @@ s_logger = logging.getLogger('server.log')
 class SChatServer(Messaging):
     """
     """
+    port = Port()
 
     def __init__(self, address, port):
         
@@ -30,18 +31,18 @@ class SChatServer(Messaging):
 
             if (address==""):
                 address = DEFAULT_IP_ADDRESS
-            if port <= 0:
-                port =  DEFAULT_PORT    
-            self.server_socket.bind((address, port))    
+            
+            self.port = port if port else DEFAULT_PORT    
+            self.server_socket.bind((address, self.port))    
 
             self.server_socket.settimeout(0.2)
             # self.server_socket.bind((DEFAULT_IP_ADDRESS, DEFAULT_PORT))
             self.server_socket.listen()
-            s_logger.info(f"Server is listening the port: {port}")
+            s_logger.info(f"Server is listening the port: {self.port}")
             #initialize(drop) client's list
             self.clients = []
             self.messages = [] #Clients messages tuple in format (sender, data, socket)
-        except error:
+        except error as e:
             s_logger.exception(f"Server connection error accured: {e.strerror}")
 
     def __del__(self):
