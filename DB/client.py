@@ -9,13 +9,13 @@ class Client(Base):
         id = Column(Integer, primary_key=True)
         login = Column(String(25), unique=True)
         password = Column(String(25))
-
-        # def __init__(self, login, pwd):
-        #     self.login = login
-        #     self.password = pwd
-
+        ClientHistoryRecords = relationship("ClienHistory", back_populates='Client')
+        Contacts = relationship("Contact", back_populates='Contact')
         def __repr__(self):
             return "<Client('%s', '%s', '%s')>" % (self.id, self.login, self.password)
+
+
+# Client.ClientHistoryRecords = relationship("ClienHistory", back_populates='Client')
 
 
 class ClientDetailesStorage:
