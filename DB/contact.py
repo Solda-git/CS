@@ -2,6 +2,7 @@ from sqlalchemy.sql.schema import Column
 from sqlalchemy.sql.sqltypes import Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy import ForeignKey
+from sqlalchemy import and_
 
 from DB.db import Base
 
@@ -41,7 +42,18 @@ class ContactStorage:
         except Exception as e:
             print(f'Exception accured while adding record in "Contact" table. {e}') 
 
+    def delete(self, client_id, contact_id):
+        try:
+            contact = self._session.query.Contact.filter(and_(
+                    Contact.client_id == client_id,
+                    Contact.contact_id == contact_id 
+                )).one()
+            self._session.delete(contact)
+            self._session.commit()
+        except Exception as e:
+            print(f'Error while deleting of client\'s contact. {e}')    
+
     def get_client_contacts(self, client_id):
         return self._session.query.Contact.filter(
-        Contact.client_id == client_id
-        ).all()
+                Contact.client_id == client_id
+            ).all()

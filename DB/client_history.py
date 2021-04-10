@@ -28,7 +28,6 @@ class ClientHistoryStorage:
     
     def __init__(self, session):
         self._session = session
-
     
     def add(self, client_id, ip_address, login_time=time()):
         try:
