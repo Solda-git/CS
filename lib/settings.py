@@ -16,13 +16,17 @@ COMMAND = 'command'
 TIMESTAMP = 'timestamp'
 USER = 'user'
 ACCOUNT_NAME = 'account_name'
+PASSWORD = 'password'
+
 
 ONLINE = 'online'
 RESPONSE = 'response'
 ERROR = 'error'
+ALERT = 'alert'
 
 SENDER = 'sender'
 MESSAGE = 'message'
+AUTHENTICATE = 'authenticate'
 MESSAGE_TEXT = 'message_text'   
 
 # log settings
@@ -63,3 +67,7 @@ class Port:
 DB_NAME = './DB/chat.db'
 
 #####################################
+
+###TEMPORARY BLOCK################
+#####CLIENT PASSWORD##############
+CLIENT_PASSWORD = "pass1"

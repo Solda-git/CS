@@ -9,12 +9,13 @@ import json
 from socket import *
 from lib.routines import Messaging, logdeco
 from lib.settings import MAX_CONNECTIONS, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME, ONLINE, DEFAULT_PORT, \
-    DEFAULT_IP_ADDRESS, RESPONSE, ERROR, MESSAGE, MESSAGE_TEXT, SENDER, Port
+    DEFAULT_IP_ADDRESS, RESPONSE, ERROR, MESSAGE, MESSAGE_TEXT, SENDER, Port, AUTHENTICATE, PASSWORD, ALERT
 import select
 from contextlib import closing
 from time import time
 import logging
 import log.config.server_log_config
+from icecream import ic 
 
 s_logger = logging.getLogger('server.log')
 
@@ -23,7 +24,13 @@ class SChatServer(Messaging):
     """
     port = Port()
 
-    def __init__(self, address, port):
+    def __init__(   self, 
+                    details_storage,
+                    history_storage,
+                    contacts_storage, 
+                    address, 
+                    port
+                ):
         
         try:
             self.server_socket = socket(AF_INET,SOCK_STREAM)
@@ -34,7 +41,9 @@ class SChatServer(Messaging):
             
             self.port = port if port else DEFAULT_PORT    
             self.server_socket.bind((address, self.port))    
-
+            self.detailes_storage = details_storage
+            self.history_storage = history_storage
+            self.contacts_storage = contacts_storage
             self.server_socket.settimeout(0.2)
             # self.server_socket.bind((DEFAULT_IP_ADDRESS, DEFAULT_PORT))
             self.server_socket.listen()
@@ -79,6 +88,7 @@ class SChatServer(Messaging):
         :return: dict with response code
         """
         s_logger.debug(f'Parsing message: {message}')
+        ic(message)
         if COMMAND in message and message[COMMAND] == ONLINE and TIMESTAMP in message \
             and USER in message and ACCOUNT_NAME in message[USER] and message[USER][ACCOUNT_NAME] == 'guest':
             s_logger.info(f'Correct message recieved:{message}')
@@ -94,10 +104,34 @@ class SChatServer(Messaging):
             ####new code###
             self.messages.append((message[ACCOUNT_NAME], message[MESSAGE_TEXT], client))
             ###end of new code###
-
-
             print(f'Message with {message[COMMAND]} command')
             return 
+
+        elif COMMAND in message and message[COMMAND] == AUTHENTICATE and TIMESTAMP in message \
+                and USER in message:
+             
+                is_authenticated = self.detailes_storage.authenticate(
+                            message[USER][ACCOUNT_NAME], 
+                            message[USER][PASSWORD]
+                        )               
+                if is_authenticated:
+                    s_logger.info(f'User {message[USER][ACCOUNT_NAME]} authenticated.')
+                    self.send_message(client,           
+                                        {
+                                            RESPONSE: 200,
+                                            ALERT: "Authentication completed."
+                                        }
+                                    )
+                    return
+                else:
+                    s_logger.error(f'User {message[USER][ACCOUNT_NAME]} authentication request rejected.')
+                    self.send_message(client,           
+                                        {
+                                            RESPONSE: 402,
+                                            ALERT: "Wrong account name or password."
+                                        }
+                                    )
+                    return 
 
         s_logger.error(f'Incorrect message {message}. Bad request.')
         return {

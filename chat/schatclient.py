@@ -13,11 +13,13 @@ from lib.routines import Messaging, logdeco
 
 from lib.settings import ONLINE, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME, RESPONSE, ERROR, CHAT_SERVER_IP_ADDRESS, \
     DEFAULT_PORT, RECV_MODE, SEND_MODE, PEER_TO_PEER_MODE, DUPLEX_MODE, BROADCAST_MODE, MESSAGE_TEXT, MESSAGE, SENDER, \
-    Port
+    Port, PASSWORD, CLIENT_PASSWORD, ALERT, AUTHENTICATE
 import logging
 import log.config.client_log_config
 import select
 import _io
+
+from icecream import ic
 
 c_logger = logging.getLogger('client.log')
 
@@ -27,16 +29,18 @@ class SChatClient(Messaging):
     """
     server_port = Port()
     @logdeco
-    def __init__(self, mode, addr, port, name='guest'):
+    def __init__(self, name, mode, addr, port):
         """
             initializing socket connection
             socket params are taken from config.py
         """
         #initialize socket
         try:
+            self._name = name 
             self._mode = mode
             self.client_socket = socket(AF_INET,SOCK_STREAM)
             self.server_port = port
+            self._addr = addr
             print(f'Type of "port" property: {type(self.server_port)}')
             self.client_socket.connect((addr, self.server_port))
             c_logger.info(f"Client connected to address/port: {addr}/{port}")
@@ -72,6 +76,20 @@ class SChatClient(Messaging):
         return online_msg
 
     @logdeco
+    def authenticate(self):
+        auth_msg =  {
+            COMMAND: AUTHENTICATE,
+            TIMESTAMP: time(),
+            USER: {
+                ACCOUNT_NAME: self._name,
+                PASSWORD: CLIENT_PASSWORD 
+            }
+        }
+        c_logger.info(f'Authenticate message for user {auth_msg[USER][ACCOUNT_NAME]} '
+                   f'created: {auth_msg}.')
+        return auth_msg   
+
+    @logdeco
     def parse_server_answer(self, message):
         """
         function processes message from the server
@@ -82,10 +100,18 @@ class SChatClient(Messaging):
         if RESPONSE in message:
             if message[RESPONSE] == 200:
                 c_logger.info(f'Correct server response: {message[RESPONSE]}')
+                if ALERT in message:
+                    c_logger.info(f'Response details: {message[ALERT]}')
                 return f'Correct message with response {message[RESPONSE]}.'
             if message[RESPONSE] == 400:    
-                c_logger.warning("Bad server respnse: {message[RESPONSE]}: {message[ERROR]}")
-                return f'Bad response. {message[RESPONSE]}: {message[ERROR]}'
+                c_logger.warning("Bad server response: {message[RESPONSE]}: {message[ERROR]}")
+                raise Exception(f'Connection fault. Client missed online call. Error code: {message[RESPONSE]}')
+                # return f'Bad response. {message[RESPONSE]}: {message[ERROR]}'
+            if message[RESPONSE] == 402:    
+                c_logger.warning(f"Bad server response: {message[RESPONSE]}: {message[ALERT]}")
+                raise  Exception(f'Authentication fault.  Error code: {message[RESPONSE]}. Alert: {message[ALERT]}')
+                 
+                # return f'Bad response. {message[RESPONSE]}: {message[ALERT]}'    
         raise ValueError
 
 
@@ -133,6 +159,11 @@ class SChatClient(Messaging):
                 c_logger.info(f'Message: {online_msg} sent to server.')
                 response_message = self.parse_server_answer(self.get_message(self.client_socket))
                 c_logger.info(f'Received message from the server: {response_message}.')
+                auth_msg = self.authenticate()
+                self.send_message(self.client_socket, auth_msg)
+                response_message = self.parse_server_answer(self.get_message(self.client_socket))
+                c_logger.info(f'Received message from the server: {response_message}.')
+
 
             except (ValueError, json.JSONDecodeError):
                 c_logger.error("Incorrect client message received. Can\'t decode server message.")
@@ -190,8 +221,6 @@ class SChatClient(Messaging):
                 break
         print("run_in_pipe finishing")
 
-
-    @logdeco
     def run_in_send_mode(self):
         # print(f"Client is working in <send> mode")
         try:
@@ -200,7 +229,6 @@ class SChatClient(Messaging):
             c_logger.error(f'Connection with server {self.addr} lost.')
             sys.exit(1)
     
-    @logdeco
     def run_in_recv_mode(self):
         # print(f"Client is working in <receive> mode")
         try:
@@ -209,7 +237,6 @@ class SChatClient(Messaging):
             c_logger.error(f'Connection with server {self.addr} lost.')
             sys.exit(1)
 
-    @logdeco
     def run_in_broadcast_mode(self):
         receiver_list = []
         sender_list = []
