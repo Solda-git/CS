@@ -49,8 +49,8 @@ class SChatServer(Messaging):
             self.server_socket.listen()
             s_logger.info(f"Server is listening the port: {self.port}")
             #initialize(drop) client's list
-            self.clients = []
-            self.messages = [] #Clients messages tuple in format (sender, data, socket)
+            self.clients = [] # Client's tuple in format (socket, ip_address) 
+            self.messages = [] #Client's messages tuple in format (sender, data, socket)
         except error as e:
             s_logger.exception(f"Server connection error accured: {e.strerror}")
 
@@ -71,7 +71,7 @@ class SChatServer(Messaging):
     def close_client(self, s):
         """
             normal closing of client socket
-            looking for s socket, remove from the clients socket list and close it
+            looking for s socket, remove from the client's socket list and close it
         """
         for i in range(len(self.clients)):
             if s == self.clients[i]:
@@ -88,7 +88,6 @@ class SChatServer(Messaging):
         :return: dict with response code
         """
         s_logger.debug(f'Parsing message: {message}')
-        ic(message)
         if COMMAND in message and message[COMMAND] == ONLINE and TIMESTAMP in message \
             and USER in message and ACCOUNT_NAME in message[USER] and message[USER][ACCOUNT_NAME] == 'guest':
             s_logger.info(f'Correct message recieved:{message}')
@@ -115,6 +114,11 @@ class SChatServer(Messaging):
                             message[USER][PASSWORD]
                         )               
                 if is_authenticated:
+                    ###adding history rercord for authenticated client###
+                    client_record = self.detailes_storage.get_client_by_name(
+                            message[USER][ACCOUNT_NAME]
+                        )
+                    self.history_storage.add(client_record.id, "IP ADRDRESS!!!!!!!!!!", time())
                     s_logger.info(f'User {message[USER][ACCOUNT_NAME]} authenticated.')
                     self.send_message(client,           
                                         {

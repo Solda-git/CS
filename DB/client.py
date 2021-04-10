@@ -64,7 +64,7 @@ class ClientDetailesStorage:
     def get_client_by_id(self, client_id):
         return self._session.query(Client).filter(Client.login == client_id).one()
 
-    def get_client_by_login(self, client_login):
+    def get_client_by_name(self, client_login):
         return self._session.query(Client).filter(Client.login == client_login).one()
 
     def get_all_clients(self):

@@ -29,7 +29,7 @@ class ClientHistoryStorage:
         self._session = session
 
     
-    def add(self, id, ip_address, login_time=time()):
+    def add(self, client_id, ip_address, login_time=time()):
         with self._session.begin():
             self._session.add(ClientHistory(
                 client_id=id,
