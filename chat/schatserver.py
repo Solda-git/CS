@@ -9,7 +9,8 @@ import json
 from socket import *
 from lib.routines import Messaging, logdeco
 from lib.settings import MAX_CONNECTIONS, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME, ONLINE, DEFAULT_PORT, \
-    DEFAULT_IP_ADDRESS, RESPONSE, ERROR, MESSAGE, MESSAGE_TEXT, SENDER, Port, AUTHENTICATE, PASSWORD, ALERT
+    DEFAULT_IP_ADDRESS, RESPONSE, ERROR, MESSAGE, MESSAGE_TEXT, SENDER, Port, AUTHENTICATE, PASSWORD, ALERT, \
+    GET_CONTACTS, ADD_CONTACT, DEL_CONTACT, CONTACT    
 import select
 from contextlib import closing
 from time import time
@@ -67,9 +68,11 @@ class SChatServer(Messaging):
         # while (len(self.clients)):
         #     s = self.clients.pop()
         #     s.close()
-        while self.clients.items():
-            c = self.clients.popitem()
-            c[0].close()
+
+        if self.clients:
+            while self.clients.items():
+                c = self.clients.popitem()
+                c[0].close()
 
 
 
@@ -96,6 +99,7 @@ class SChatServer(Messaging):
         :param message:
         :return: dict with response code
         """
+        ic(message)
         s_logger.debug(f'Parsing message: {message}')
         if COMMAND in message and message[COMMAND] == ONLINE and TIMESTAMP in message \
             and USER in message and ACCOUNT_NAME in message[USER] and message[USER][ACCOUNT_NAME] == 'guest':
@@ -127,14 +131,14 @@ class SChatServer(Messaging):
                     client_record = self.detailes_storage.get_client_by_name(
                             message[USER][ACCOUNT_NAME]
                         )
+                    #getting client IP in format:'<IP-Address>:<Port>
                     client_ip = self.clients[client][0]+':'+str(self.clients[client][1])
                     
-                    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    #client auth history DB logging:
                     self.history_storage.add(
                         client_id=client_record.id, 
                         ip_address=client_ip
                         )
-
 
                     s_logger.info(f'User {message[USER][ACCOUNT_NAME]} authenticated.')
                     self.send_message(client,           
@@ -153,8 +157,41 @@ class SChatServer(Messaging):
                                         }
                                     )
                     return 
+        
+        elif COMMAND in message and message[COMMAND] == GET_CONTACTS and TIMESTAMP in message \
+                and ACCOUNT_NAME in message:
+            s_logger.error(f'User {message[ACCOUNT_NAME]} is getting his contact list.')
+            client_record = self.detailes_storage.get_client_by_name(
+                            message[ACCOUNT_NAME]
+                        )
+            self.send_message(client,           
+                                {
+                                    RESPONSE: 202,
+                                    ALERT: self.contacts_storage.get_client_contacts(client_record.id)
+                                }
+                            )
+            return 
+
+        elif COMMAND in message and message[COMMAND] in [ADD_CONTACT, DEL_CONTACT] \
+                and TIMESTAMP in message and ACCOUNT_NAME in message and CONTACT in message:
+            
+            ic(message[COMMAND])
+            client_record = self.detailes_storage.get_client_by_name(
+                            message[ACCOUNT_NAME]
+                        )
+            contact_record = self.detailes_storage.get_client_by_name(
+                            message[CONTACT]
+                        )
+            print(f'Client_record = {client_record.id} \n Contact_record = {contact_record.id}')
+            if message[COMMAND] == ADD_CONTACT:
+                self.contacts_storage.add(client_record.id, contact_record.id)
+            else:
+                self.contacts_storage.delete(client_record.id, contact_record.id)
+            self.send_message(client, {RESPONSE: 200})
+            return
 
         s_logger.error(f'Incorrect message {message}. Bad request.')
+        print('bad request')
         return {
             RESPONSE: 400,
             ERROR: 'Bad request'

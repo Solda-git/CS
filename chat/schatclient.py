@@ -13,11 +13,12 @@ from lib.routines import Messaging, logdeco
 
 from lib.settings import ONLINE, COMMAND, TIMESTAMP, USER, ACCOUNT_NAME, RESPONSE, ERROR, CHAT_SERVER_IP_ADDRESS, \
     DEFAULT_PORT, RECV_MODE, SEND_MODE, PEER_TO_PEER_MODE, DUPLEX_MODE, BROADCAST_MODE, MESSAGE_TEXT, MESSAGE, SENDER, \
-    Port, PASSWORD, CLIENT_PASSWORD, ALERT, AUTHENTICATE
+    Port, PASSWORD, CLIENT_PASSWORD, ALERT, AUTHENTICATE, GET_CONTACTS, DEL_CONTACT, ADD_CONTACT, CONTACT 
 import logging
 import log.config.client_log_config
 import select
 import _io
+import copy
 
 from icecream import ic
 
@@ -41,7 +42,8 @@ class SChatClient(Messaging):
             self.client_socket = socket(AF_INET,SOCK_STREAM)
             self.server_port = port
             self._addr = addr
-            print(f'Type of "port" property: {type(self.server_port)}')
+            # print(f'Type of "port" property: {type(self.server_port)}')
+            self._contacts = []
             self.client_socket.connect((addr, self.server_port))
             c_logger.info(f"Client connected to address/port: {addr}/{port}")
 
@@ -89,6 +91,35 @@ class SChatClient(Messaging):
                    f'created: {auth_msg}.')
         return auth_msg   
 
+    def get_contacts(self):
+        get_contacts_msg = {
+
+            COMMAND: GET_CONTACTS,
+            TIMESTAMP: time(),
+            ACCOUNT_NAME: self._name
+        }
+        c_logger.info(f'Get_contact message for user {get_contacts_msg[ACCOUNT_NAME]} '
+                   f'created: {get_contacts_msg}.')
+        return get_contacts_msg 
+
+    def add_contact(self, contact_name):
+        add_contact_msg = {
+                COMMAND: ADD_CONTACT,
+                ACCOUNT_NAME: self._name,
+                TIMESTAMP: time(),
+                CONTACT: contact_name
+        }
+        return add_contact_msg
+
+    def delete_contact(self, contact_name):
+        del_contact_msg = {
+                COMMAND: DEL_CONTACT,
+                ACCOUNT_NAME: self._name,
+                TIMESTAMP: time(),
+                CONTACT: contact_name
+        }
+        return del_contact_msg
+
     @logdeco
     def parse_server_answer(self, message):
         """
@@ -103,6 +134,12 @@ class SChatClient(Messaging):
                 if ALERT in message:
                     c_logger.info(f'Response details: {message[ALERT]}')
                 return f'Correct message with response {message[RESPONSE]}.'
+
+            if message[RESPONSE] == 202:
+                c_logger.info(f'Correct server response: {message[RESPONSE]}')
+                self._contacts = copy.deepcopy(message[ALERT])
+                return f'Correct message with response {message[RESPONSE]}.'    
+                
             if message[RESPONSE] == 400:    
                 c_logger.warning("Bad server response: {message[RESPONSE]}: {message[ERROR]}")
                 raise Exception(f'Connection fault. Client missed online call. Error code: {message[RESPONSE]}')
@@ -154,18 +191,45 @@ class SChatClient(Messaging):
     def run(self, conn=None):
         if conn is None:
             try:
+                # online message
+          
                 online_msg = self.make_online()
                 self.send_message(self.client_socket, online_msg)
                 c_logger.info(f'Message: {online_msg} sent to server.')
                 response_message = self.parse_server_answer(self.get_message(self.client_socket))
+          
                 c_logger.info(f'Received message from the server: {response_message}.')
+                # authentication
                 auth_msg = self.authenticate()
                 self.send_message(self.client_socket, auth_msg)
                 response_message = self.parse_server_answer(self.get_message(self.client_socket))
                 c_logger.info(f'Received message from the server: {response_message}.')
+                print('athentication received')
+                # loading contacts
+                get_contacts_msg = self.get_contacts()
+                self.send_message(self.client_socket, get_contacts_msg)
+                response_message = self.parse_server_answer(self.get_message(self.client_socket))
+              
+                c_logger.info(f'Received message from the server: {response_message}.')
+                ic(self._contacts)     
+
+                #### testing of add_contact and delete_contact functions:###
+                del_msg = self.delete_contact('test2')
+                self.send_message(self.client_socket, del_msg)
+                response_message = self.parse_server_answer(self.get_message(self.client_socket))
+                print(f'after delete: {response_message}')
+                input('!')
+
+                add_msg = self.add_contact('test2')
+                self.send_message(self.client_socket, add_msg)
+                response_message = self.parse_server_answer(self.get_message(self.client_socket))
+                print(f'after add: {response_message}')
+                ### and of test code 
 
 
-            except (ValueError, json.JSONDecodeError):
+            except (ValueError, json.JSONDecodeError) as e:
+                ic(type(e))
+                print(e)    
                 c_logger.error("Incorrect client message received. Can\'t decode server message.")
                 sys.exit(1)
 
