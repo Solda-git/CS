@@ -214,16 +214,18 @@ class SChatClient(Messaging):
                 ic(self._contacts)     
 
                 #### testing of add_contact and delete_contact functions:###
+                add_msg = self.add_contact('test2')
+                self.send_message(self.client_socket, add_msg)
+                response_message = self.parse_server_answer(self.get_message(self.client_socket))
+                print(f'after add: {response_message}')
+                
                 del_msg = self.delete_contact('test2')
                 self.send_message(self.client_socket, del_msg)
                 response_message = self.parse_server_answer(self.get_message(self.client_socket))
                 print(f'after delete: {response_message}')
                 input('!')
 
-                add_msg = self.add_contact('test2')
-                self.send_message(self.client_socket, add_msg)
-                response_message = self.parse_server_answer(self.get_message(self.client_socket))
-                print(f'after add: {response_message}')
+                
                 ### and of test code 
 
 

@@ -33,6 +33,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.client_history = ClientHistoryStorage(session)
         self.client_detailes = ClientDetailesStorage(session)
         self.load_clients()
+        self.load_history()
 
 
     def load_clients(self):
@@ -41,24 +42,35 @@ class MainWindow(QtWidgets.QMainWindow):
         self.clientTableWidget.setRowCount(rows)
         self.clientTableWidget.setColumnCount(3)
         
-
-        for row in range(rows):
-            ic(row)            
+        for row in range(rows):      
             self.clientTableWidget.setItem(row, 0, QtWidgets.QTableWidgetItem(str(self.clients[row].id)))
             self.clientTableWidget.setItem(row, 1, QtWidgets.QTableWidgetItem(self.clients[row].login))
             self.clientTableWidget.setItem(row, 2, QtWidgets.QTableWidgetItem(self.clients[row].password))
             
             row += 1
-
+        self.clientTableWidget.setHorizontalHeaderLabels(['ID', 'Login', 'Password'])
         self.clientTableWidget.show()
+
+    def load_history(self):
+        self.history = self.client_history.get_client_history()
+        rows = len(self.history)
+        self.clientHistoryTableWidget.setRowCount(rows)
+        self.clientHistoryTableWidget.setColumnCount(3)
+
+        for row in range(rows):          
+            self.clientHistoryTableWidget.setItem(row, 0, QtWidgets.QTableWidgetItem(self.history[row].login))    
+            self.clientHistoryTableWidget.setItem(row, 1, QtWidgets.QTableWidgetItem(str(self.history[row].ip_address)))
+            self.clientHistoryTableWidget.setItem(row, 2, QtWidgets.QTableWidgetItem(str(self.history[row].login_time)))
+            row += 1
+
+        self.clientHistoryTableWidget.setHorizontalHeaderLabels(['Login', 'IP-address', 'time'])
+        self.clientHistoryTableWidget.show()
 
 if __name__ == "__main__":
     
     app = QtWidgets.QApplication(sys.argv)
     db_connector = DBConnector()
     w = MainWindow(db_connector)
-    # w.tabWidget.tabBarClicked(0)
-
 
     w.show()
     sys.exit(app.exec_())

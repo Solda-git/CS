@@ -7,13 +7,14 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import relationship
 from sqlalchemy import ForeignKey
 
+
 class Client(Base):
         __tablename__ = "Client"
         id = Column(Integer, primary_key=True)
         login = Column(String(25), unique=True)
         password = Column(String(25))
         
-        ClientHistoryRecords = relationship("ClientHistory", back_populates='Clients')
+        ClientHistoryRecords = relationship("ClientHistory", back_populates='ClientRecord')
         
         Contacts = relationship("Contact", 
                     primaryjoin="Client.id==Contact.contact_id",
@@ -23,8 +24,8 @@ class Client(Base):
                     primaryjoin="Client.id==Contact.client_id",
                     back_populates='ClientList')
         
-        def __repr__(self):
-            return "<Client('%s', '%s', '%s')>" % (self.id, self.login, self.password)
+        # def __repr__(self):
+        #     return "<Client('%s', '%s', '%s')>" % (self.id, self.login, self.password)
 
 
 # Client.ClientHistoryRecords = relationship("ClienHistory", back_populates='Client')
@@ -71,3 +72,11 @@ class ClientDetailesStorage:
         return self._session.query(Client).all()
     
 
+    def get_client_history(self, id=None):
+        if id:
+            pass
+        return self._session.query( Client.login, 
+                                    Client.ClientHistoryRecords.ip_address, 
+                                    Client.ClientHistoryRecords.login_time
+                                    ).all()
+    
