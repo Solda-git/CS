@@ -10,11 +10,9 @@ def logdeco(fn):
         call_module = stack()[1].filename[-9:-3]
         func_name = stack()[1].function
         if call_module == 'client':
-            chat_logger = logging.getLogger('client.log')
-            # print('client module called.')      
+            chat_logger = logging.getLogger('client.log') 
         elif call_module == 'server':
             chat_logger = logging.getLogger('server.log')
-            # print('server module called.')
         else: 
             result = fn(*args, **kwargs)
             return result
@@ -54,4 +52,5 @@ class Messaging():
         :param message:
         :return:
         """
+        # print(message)
         socket.send(json.dumps(message).encode(ENCODING))

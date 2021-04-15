@@ -16,14 +16,23 @@ COMMAND = 'command'
 TIMESTAMP = 'timestamp'
 USER = 'user'
 ACCOUNT_NAME = 'account_name'
+PASSWORD = 'password'
+
 
 ONLINE = 'online'
 RESPONSE = 'response'
 ERROR = 'error'
+ALERT = 'alert'
 
 SENDER = 'sender'
 MESSAGE = 'message'
+AUTHENTICATE = 'authenticate'
 MESSAGE_TEXT = 'message_text'   
+GET_CONTACTS = 'get_contacts'
+DEL_CONTACT = 'del_contact'
+ADD_CONTACT = 'add_contact'
+CONTACT = 'contact'
+
 
 # log settings
 LOG_LEVEL = logging.DEBUG
@@ -63,3 +72,7 @@ class Port:
 DB_NAME = './DB/chat.db'
 
 #####################################
+
+###TEMPORARY BLOCK################
+#####CLIENT PASSWORD##############
+CLIENT_PASSWORD = "pass1"
